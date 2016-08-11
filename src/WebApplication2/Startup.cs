@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Communication.Client;
 using SaasKit.Multitenancy;
@@ -32,7 +31,7 @@ namespace WebApplication2
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMultitenancy<Tenant, UXRiskTenantResolver>();
-            
+
             services.AddTransient(x => ServicePartitionResolver.GetDefault());
             services.AddTransient<IExceptionHandler, HttpCommunicationExceptionHandler>();
             services.AddSingleton<IHttpCommunicationClientFactory, HttpCommunicationClientFactory>();
@@ -42,8 +41,6 @@ namespace WebApplication2
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
             app.UseMultitenancy<Tenant>();
             app.UseMiddleware<HttpServiceGatewayMiddleware>();
             app.UseMvc();
