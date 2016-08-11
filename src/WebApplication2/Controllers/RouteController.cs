@@ -20,7 +20,7 @@ namespace WebApplication2.Controllers
         public IActionResult Post([FromBody] IEnumerable<RouteInfo> routes)
         {
             RouteManager.Routes = routes;
-            return Ok();
+            return Ok(RouteManager.Routes);
         }
     }
 }
