@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using Gateway.Admin.Middlewares.GatewayMiddleware;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApplication2.GatewayMiddleware;
 
-namespace WebApplication2.Controllers
+namespace Gateway.Admin.Controllers
 {
-    [Route("route")]
+    [AllowAnonymous]
     public class RouteController : Controller
     {
         // GET /route

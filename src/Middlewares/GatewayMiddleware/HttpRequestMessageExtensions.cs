@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Http;
 
-namespace WebApplication2.GatewayMiddleware
+namespace Gateway.Admin.Middlewares.GatewayMiddleware
 {
     public static class HttpRequestMessageExtensions
     {
@@ -48,10 +48,9 @@ namespace WebApplication2.GatewayMiddleware
                 if (IgnoredRequestHeaders.Contains(header.Key))
                     continue;
 
-                if (!target.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray()) &&
-                    target.Content != null)
+                if (!target.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray()))
                 {
-                    target.Content.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                    target.Content?.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
                 }
             }
         }
@@ -93,22 +92,16 @@ namespace WebApplication2.GatewayMiddleware
         /// </summary>
         private static void AddRfcForwardedHeader(HttpRequestMessage target, HttpContext context)
         {
-            List<string> parts = new List<string>();
+            List<string> parts = new List<string> {$"by=_{Environment.MachineName}"};
 
             // "by"
-            parts.Add($"by=_{Environment.MachineName}");
 
             // "for"
             if (context.Connection.RemoteIpAddress != null)
             {
-                if (context.Connection.RemoteIpAddress.AddressFamily == AddressFamily.InterNetworkV6)
-                {
-                    parts.Add($"for=\"[{context.Connection.RemoteIpAddress.ToString()}]\"");
-                }
-                else
-                {
-                    parts.Add($"for={context.Connection.RemoteIpAddress.ToString()}");
-                }
+                parts.Add(context.Connection.RemoteIpAddress.AddressFamily == AddressFamily.InterNetworkV6
+                    ? $"for=\"[{context.Connection.RemoteIpAddress}]\""
+                    : $"for={context.Connection.RemoteIpAddress}");
             }
 
             // "host"
@@ -147,15 +140,10 @@ namespace WebApplication2.GatewayMiddleware
             // X-Forwarded-For addresses have to be concatenated
             var remoteIpAddress = context.Connection.RemoteIpAddress?.ToString();
             string existingXForwardedFor = context.Request.Headers[CustomHeaderNames.XForwardedFor];
-            if (existingXForwardedFor != null && remoteIpAddress != null)
-            {
-                target.Headers.Remove(CustomHeaderNames.XForwardedFor);
-                target.Headers.Add(CustomHeaderNames.XForwardedFor, existingXForwardedFor + "," + remoteIpAddress);
-            }
-            else if (remoteIpAddress != null)
-            {
-                target.Headers.Add(CustomHeaderNames.XForwardedFor, remoteIpAddress);
-            }
+            if (remoteIpAddress == null) return;
+
+            target.Headers.Remove(CustomHeaderNames.XForwardedFor);
+            target.Headers.Add(CustomHeaderNames.XForwardedFor, existingXForwardedFor + "," + remoteIpAddress);
         }
 
         public static class CustomHeaderNames

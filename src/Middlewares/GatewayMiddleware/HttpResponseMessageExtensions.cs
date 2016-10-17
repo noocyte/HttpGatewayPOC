@@ -5,13 +5,10 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace WebApplication2.GatewayMiddleware
+namespace Gateway.Admin.Middlewares.GatewayMiddleware
 {
     public static class HttpResponseMessageExtensions
     {
-        /// <summary>
-        /// Response headers which are either set by the framework or shouldn't be copied.
-        /// </summary>
         private static readonly List<string> IgnoredResponseHeaders = new List<string>
         {
             "Connection",
@@ -20,9 +17,6 @@ namespace WebApplication2.GatewayMiddleware
             "Transfer-Encoding"
         };
 
-        /// <summary>
-        /// Copies all details from the source to the current response.
-        /// </summary>
         public static async Task CopyToCurrentContext(this HttpResponseMessage source, HttpContext context)
         {
             if (source == null)
@@ -45,7 +39,14 @@ namespace WebApplication2.GatewayMiddleware
 
             context.AddResponseProxyHeaders();
 
-            await source.Content.CopyToAsync(context.Response.Body);
+            // todo huh ?
+            if (context.Response.Body == null)
+            {
+                context.Response.StatusCode = 666;
+                return;
+            }
+
+            await source.Content.CopyToAsync(context.Response.Body).ConfigureAwait(false);
         }
 
         public static void AddResponseProxyHeaders(this HttpContext context)
